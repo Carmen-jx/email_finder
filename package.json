@@ -1,0 +1,12 @@
+{
+  "name": "email_finder",
+  "version": "1.0.0",
+  "main": "script.js",
+  "scripts": {
+    "start": "node script.js"
+  },
+  "dependencies": {
+    "@slack/bolt": "^3.19.0",
+    "dotenv": "^16.6.1"
+  }
+}

@@ -51,6 +51,7 @@ const callbackServer = http.createServer(async (req, res) => {
     let body = "";
     req.on("data", (chunk) => (body += chunk));
     req.on("end", async () => {
+      let responded = false;
       try {
         const data = JSON.parse(body);
         console.log("Clay callback received:", JSON.stringify(data, null, 2));
@@ -60,13 +61,14 @@ const callbackServer = http.createServer(async (req, res) => {
         // Always acknowledge Clay immediately with 200
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ ok: true }));
+        responded = true;
 
         if (!channel || !thread_ts) {
           console.error("Missing channel or thread_ts in Clay callback — skipping Slack reply");
           return;
         }
 
-        const emailTrimmed = email && email.trim();
+        const emailTrimmed = email && email.trim() && email.trim() !== "empty" ? email.trim() : "";
         if (emailTrimmed) {
           const nameStr = name ? ` (${name})` : "";
           await app.client.chat.postMessage({
@@ -85,8 +87,10 @@ const callbackServer = http.createServer(async (req, res) => {
         }
       } catch (err) {
         console.error("Error handling Clay callback:", err);
-        res.writeHead(500, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: err.message }));
+        if (!responded) {
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: err.message }));
+        }
       }
     });
   } else {
